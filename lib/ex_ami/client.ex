@@ -79,6 +79,8 @@ defmodule ExAmi.Client do
   def register_listener(pid, listener_descriptor) when is_pid(pid),
     do: do_register_listener(pid, listener_descriptor)
 
+  def register_listener(_client, {nil, nil}), do: nil
+
   def register_listener(client, listener_descriptor),
     do: do_register_listener(get_worker_name(client), listener_descriptor)
 
@@ -138,6 +140,8 @@ defmodule ExAmi.Client do
     case :erlang.apply(conn_module, :open, [conn_options]) do
       {:ok, conn} ->
         reader = ExAmi.Reader.start_link(data.worker_name, conn)
+
+        register_listener(data.name, {ServerConfig.get(data.server_info, :callback), nil})
 
         next_state(
           %ClientState{data | connection: conn, reader: reader, online: true},
